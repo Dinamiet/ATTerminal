@@ -9,14 +9,20 @@ static void handle_command(ATTerminal* at, char* command);
 static void handle_command(ATTerminal* at, char* response)
 {
 	(void)at; // Unused
-	printf("'%s' -> ", response);
-	char* command = strtok(response, " ");
-	char* paramStart = strtok(NULL, " ");
 
-	if (paramStart)
-		printf("'%s' '%s'\n", command, paramStart);
-	else
-		printf("'%s'\n", command);
+	char* params = NULL;
+	if (*response == '+')
+	{
+		params = strchr(response, ' ');
+		if (params)
+			*params++ = '\0';
+	}
+
+	size_t length = strlen(response);
+	if (length)
+	{
+		printf("\t%s -> '%s'\n", response, params);
+	}
 }
 
 void ATTerminal_Process(ATTerminal* at)
