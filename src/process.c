@@ -1,12 +1,14 @@
 #include "atterminal.h"
+#include "fnv.h"
 
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
-static void handle_command(ATTerminal* at, char* command);
+static void extract_response(ATTerminal* at, char* response);
+static void handle_response(ATTerminal* at, char* response, char* params);
 
-static void handle_command(ATTerminal* at, char* response)
+static void extract_response(ATTerminal* at, char* response)
 {
 	(void)at; // Unused
 
@@ -23,8 +25,29 @@ static void handle_command(ATTerminal* at, char* response)
 	size_t length = strlen(response);
 	if (length)
 	{
-		printf("\t%s -> '%s'\n", response, params);
+		handle_response(at, response, params);
 	}
+}
+
+static void handle_response(ATTerminal* at, char* response, char* params)
+{
+	ATTerminalResponseNotifier* notifier = at->NotifierList;
+	if (!notifier)
+		return;
+
+	size_t id = FNV(response, strlen(response));
+	while (notifier->ID)
+	{
+		if (notifier->ID == id)
+		{
+			notifier->Notifier_Handler(at, params);
+			return;
+		}
+		notifier++;
+	}
+
+	if (notifier->Notifier_Handler)
+		notifier->Notifier_Handler(at, response);
 }
 
 void ATTerminal_Process(ATTerminal* at)
@@ -64,7 +87,7 @@ void ATTerminal_Process(ATTerminal* at)
 		}
 
 		*(cmdEnd + 1) = '\0';
-		handle_command(at, cmdStart);
+		extract_response(at, cmdStart);
 
 		at->Index = &at->Unprocessed[at->Index] - (cmdTerminate + 1);
 		memmove(at->Unprocessed, cmdTerminate + 1, at->Index);
