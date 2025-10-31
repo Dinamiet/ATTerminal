@@ -36,7 +36,7 @@ void ATTerminal_Process(ATTerminal* at)
 		memset(&at->Unprocessed[at->Index], 0, sizeof(at->Unprocessed) - at->Index);
 	}
 
-	size_t numRead = at->Read(&at->Unprocessed[at->Index], sizeof(at->Unprocessed) - at->Index);
+	size_t numRead = at->Read_Handler(&at->Unprocessed[at->Index], sizeof(at->Unprocessed) - at->Index);
 	if (!numRead)
 		return;
 

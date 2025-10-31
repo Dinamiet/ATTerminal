@@ -9,13 +9,13 @@ typedef size_t (*ATTerminal_Interface)(void* data, size_t size);
 
 typedef struct _ATTerminal_
 {
-	ATTerminal_Interface Read;
-	ATTerminal_Interface Write;
+	ATTerminal_Interface Read_Handler;
+	ATTerminal_Interface Write_Handler;
 	char                 Unprocessed[MAX_LINE_LENGTH];
 	size_t               Index;
 } ATTerminal;
 
-void ATTerminal_Init(ATTerminal* at, ATTerminal_Interface read, ATTerminal_Interface write);
+void ATTerminal_Init(ATTerminal* at, ATTerminal_Interface read_handler, ATTerminal_Interface write_handler);
 void ATTerminal_Process(ATTerminal* at);
 void ATTerminal_SendCommand(ATTerminal* at, char* command);
 

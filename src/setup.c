@@ -2,9 +2,10 @@
 
 #include <string.h>
 
-void ATTerminal_Init(ATTerminal* at, ATTerminal_Interface read_interface, ATTerminal_Interface write_interface)
+void ATTerminal_Init(ATTerminal* at, ATTerminal_Interface read_handler, ATTerminal_Interface write_handler)
 {
-	at->Read  = read_interface;
-	at->Write = write_interface;
+	at->Read_Handler  = read_handler;
+	at->Write_Handler = write_handler;
+
 	memset(at->Unprocessed, 0, sizeof(at->Unprocessed));
 }
