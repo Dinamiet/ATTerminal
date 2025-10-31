@@ -13,9 +13,11 @@ static void handle_command(ATTerminal* at, char* response)
 	char* params = NULL;
 	if (*response == '+')
 	{
-		params = strchr(response, ' ');
+		++response;
+		params = strchr(response, ':');
 		if (params)
 			*params++ = '\0';
+		while (isspace(*params)) ++params;
 	}
 
 	size_t length = strlen(response);
