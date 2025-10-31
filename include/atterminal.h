@@ -25,6 +25,7 @@ typedef struct _ATTerminal_
 	char                        Unprocessed[MAX_LINE_LENGTH];
 } ATTerminal;
 
+// NOTE: responseNotifiers -> special case for ID of zero
 void ATTerminal_Init(ATTerminal* at, ATTerminalResponseNotifier* responseNotifiers, ATTerminal_Interface read_handler, ATTerminal_Interface write_handler);
 void ATTerminal_Process(ATTerminal* at);
 void ATTerminal_SendCommand(ATTerminal* at, char* command);
