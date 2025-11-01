@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#define MAX_LINE_LENGTH 64
+#define MAX_LINE_LENGTH 128
 
 typedef struct _ATTerminal_ ATTerminal;
 
