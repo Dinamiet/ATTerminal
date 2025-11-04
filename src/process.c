@@ -40,7 +40,8 @@ static void handle_response(ATTerminal* at, char* response, char* params)
 	{
 		if (notifier->ID == id)
 		{
-			notifier->Notifier_Handler(at, params);
+			if (notifier->Notifier_Handler)
+				notifier->Notifier_Handler(at, params);
 			return;
 		}
 		notifier++;
