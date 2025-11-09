@@ -93,3 +93,11 @@ target_sources(
 	PRIVATE
 		${SOURCE_FILES}
 )
+
+add_subdirectory(lib)
+
+target_link_libraries(
+	${PROJECT_NAME}
+	PRIVATE
+		ChecksumHash
+)
