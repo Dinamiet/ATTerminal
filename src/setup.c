@@ -9,7 +9,8 @@ void ATTerminal_Init(ATTerminal* at, ATTerminalResponseNotifier* responseNotifie
 
 	at->NotifierList = responseNotifiers;
 
-	at->Index = 0;
+	at->Unused  = at->Buffer;
+	at->Receive = at->Buffer;
 
-	memset(at->Unprocessed, 0, sizeof(at->Unprocessed));
+	memset(at->Buffer, 0, sizeof(at->Buffer));
 }
