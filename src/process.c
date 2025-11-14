@@ -8,6 +8,8 @@
 #define OK    0x85E4B82F
 #define ERROR 0xDF22B531
 
+#define WAIT_TIMEOUT 10000
+
 static bool read_data(ATTerminal* at);
 static void extract_response(ATTerminal* at, char* response);
 static void handle_response(ATTerminal* at, char* response, char* params);
@@ -122,7 +124,8 @@ void ATTerminal_Process(ATTerminal* at)
 void ATTerminal_Wait(ATTerminal* at, char* seq)
 {
 	char* found = NULL;
-	while (!found)
+	uint32_t startTime = at->Time_Handler();
+	while (!found && (at->Time_Handler() - startTime) < WAIT_TIMEOUT)
 	{
 		read_data(at);
 		found = strstr(at->Unused, seq);
