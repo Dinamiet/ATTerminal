@@ -1,6 +1,7 @@
 #ifndef _ATTERMINAL_H_
 #define _ATTERMINAL_H_
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #define MAX_LINE_LENGTH 127
@@ -18,6 +19,7 @@ typedef struct _ATTerminalResponseNotifier_
 
 typedef struct _ATTerminal_
 {
+	bool                        Busy;
 	ATTerminal_Interface        Read_Handler;
 	ATTerminal_Interface        Write_Handler;
 	ATTerminalResponseNotifier* NotifierList;
@@ -33,5 +35,6 @@ void   ATTerminal_SendCommand(ATTerminal* at, char* command);
 size_t ATTerminal_SendRaw(ATTerminal* at, void* data, size_t size);
 size_t ATTerminal_ReadRaw(ATTerminal* at, void* data, size_t size);
 void   ATTerminal_Wait(ATTerminal* at, char* seq);
+bool   ATTerminal_IsBusy(ATTerminal* at);
 
 #endif

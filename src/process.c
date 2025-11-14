@@ -5,6 +5,9 @@
 #include <stdbool.h>
 #include <string.h>
 
+#define OK    0x85E4B82F
+#define ERROR 0xDF22B531
+
 static bool read_data(ATTerminal* at);
 static void extract_response(ATTerminal* at, char* response);
 static void handle_response(ATTerminal* at, char* response, char* params);
@@ -55,19 +58,28 @@ static void handle_response(ATTerminal* at, char* response, char* params)
 		return;
 
 	size_t id = FNV(response, strlen(response));
-	while (notifier->ID)
+	switch (notifier->ID)
 	{
-		if (notifier->ID == id)
-		{
-			if (notifier->Notifier_Handler)
-				notifier->Notifier_Handler(at, params);
-			return;
-		}
-		notifier++;
-	}
+		case OK:
+		case ERROR:
+			at->Busy = false;
+			break;
 
-	if (notifier->Notifier_Handler)
-		notifier->Notifier_Handler(at, response);
+		default:
+			while (notifier->ID)
+			{
+				if (notifier->ID == id)
+				{
+					if (notifier->Notifier_Handler)
+						notifier->Notifier_Handler(at, params);
+					return;
+				}
+				notifier++;
+			}
+			if (notifier->Notifier_Handler)
+				notifier->Notifier_Handler(at, response);
+			break;
+	}
 }
 
 void ATTerminal_Process(ATTerminal* at)
@@ -123,3 +135,5 @@ void ATTerminal_Wait(ATTerminal* at, char* seq)
 		memset(at->Receive, 0, length);
 	}
 }
+
+bool ATTerminal_IsBusy(ATTerminal* at) { return at->Busy; }
