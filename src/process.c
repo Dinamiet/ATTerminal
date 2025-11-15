@@ -60,7 +60,7 @@ static void handle_response(ATTerminal* at, char* response, char* params)
 		return;
 
 	size_t id = FNV(response, strlen(response));
-	switch (notifier->ID)
+	switch (id)
 	{
 		case OK:
 		case ERROR:
@@ -101,7 +101,7 @@ void ATTerminal_Process(ATTerminal* at)
 
 		char* cmdEnd       = cmdStart;
 		char* cmdTerminate = cmdStart;
-		while (*cmdTerminate != '\n' && *cmdTerminate != '\r')
+		while (*cmdTerminate != '\n')
 		{
 			if (!isspace(*cmdTerminate))
 				cmdEnd = cmdTerminate;
