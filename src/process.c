@@ -2,11 +2,35 @@
 #include "fnv.h"
 
 #include <ctype.h>
-#include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 
+#define OK    0x85E4B82F
+#define ERROR 0xDF22B531
+
+#define WAIT_TIMEOUT 10000
+
+static bool read_data(ATTerminal* at);
 static void extract_response(ATTerminal* at, char* response);
 static void handle_response(ATTerminal* at, char* response, char* params);
+
+static bool read_data(ATTerminal* at)
+{
+	if (at->Receive - at->Buffer >= MAX_LINE_LENGTH)
+	{
+		at->Receive -= 1;
+		memmove(at->Unused, at->Unused + 1, at->Receive - at->Unused);
+		memset(at->Receive, 0, 1);
+	}
+
+	size_t numRead = at->Read_Handler(at->Receive, MAX_LINE_LENGTH - (at->Receive - at->Buffer));
+	if (!numRead)
+		return false;
+
+	at->Receive += numRead;
+
+	return true;
+}
 
 static void extract_response(ATTerminal* at, char* response)
 {
@@ -36,43 +60,42 @@ static void handle_response(ATTerminal* at, char* response, char* params)
 		return;
 
 	size_t id = FNV(response, strlen(response));
-	while (notifier->ID)
+	switch (id)
 	{
-		if (notifier->ID == id)
-		{
-			if (notifier->Notifier_Handler)
-				notifier->Notifier_Handler(at, params);
-			return;
-		}
-		notifier++;
-	}
+		case OK:
+		case ERROR:
+			at->Busy = false;
+			break;
 
-	if (notifier->Notifier_Handler)
-		notifier->Notifier_Handler(at, response);
+		default:
+			while (notifier->ID)
+			{
+				if (notifier->ID == id)
+				{
+					if (notifier->Notifier_Handler)
+						notifier->Notifier_Handler(at, params);
+					return;
+				}
+				notifier++;
+			}
+			if (notifier->Notifier_Handler)
+				notifier->Notifier_Handler(at, response);
+			break;
+	}
 }
 
 void ATTerminal_Process(ATTerminal* at)
 {
-	if (at->Index >= sizeof(at->Unprocessed))
-	{
-		at->Index -= 1;
-		memmove(at->Unprocessed, at->Unprocessed + 1, at->Index);
-		memset(&at->Unprocessed[at->Index], 0, sizeof(at->Unprocessed) - at->Index);
-	}
-
-	size_t numRead = at->Read_Handler(&at->Unprocessed[at->Index], sizeof(at->Unprocessed) - at->Index);
-	if (!numRead)
+	if (!read_data(at))
 		return;
 
-	at->Index += numRead;
-
-	while (at->Index)
+	while (at->Receive > at->Buffer)
 	{
-		char* cmdStart = at->Unprocessed;
+		char* cmdStart = at->Unused;
 
 		while (isspace(*cmdStart))
 		{
-			if (++cmdStart > &at->Unprocessed[at->Index])
+			if (++cmdStart > at->Receive)
 				return;
 		}
 
@@ -83,15 +106,37 @@ void ATTerminal_Process(ATTerminal* at)
 			if (!isspace(*cmdTerminate))
 				cmdEnd = cmdTerminate;
 
-			if (++cmdTerminate > &at->Unprocessed[at->Index])
+			if (++cmdTerminate > at->Receive)
 				return;
 		}
 
 		*(cmdEnd + 1) = '\0';
+		at->Unused    = cmdTerminate + 1;
 		extract_response(at, cmdStart);
 
-		at->Index = &at->Unprocessed[at->Index] - (cmdTerminate + 1);
-		memmove(at->Unprocessed, cmdTerminate + 1, at->Index);
-		memset(&at->Unprocessed[at->Index], 0, sizeof(at->Unprocessed) - at->Index);
+		memmove(at->Buffer, at->Unused, at->Receive - at->Unused);
+		at->Receive -= at->Unused - at->Buffer;
+		memset(at->Receive, 0, at->Unused - at->Buffer);
+		at->Unused = at->Buffer;
 	}
 }
+
+void ATTerminal_Wait(ATTerminal* at, char* seq)
+{
+	char* found = NULL;
+	uint32_t startTime = at->Time_Handler();
+	while (!found && (at->Time_Handler() - startTime) < WAIT_TIMEOUT)
+	{
+		read_data(at);
+		found = strstr(at->Unused, seq);
+	}
+	if (found)
+	{
+		size_t length = strlen(seq);
+		memmove(found, found + length, at->Receive - (found + length));
+		at->Receive -= length;
+		memset(at->Receive, 0, length);
+	}
+}
+
+bool ATTerminal_IsBusy(ATTerminal* at) { return at->Busy; }
