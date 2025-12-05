@@ -39,5 +39,6 @@ size_t ATTerminal_SendRaw(ATTerminal* at, void* data, size_t size);
 size_t ATTerminal_ReadRaw(ATTerminal* at, void* data, size_t size);
 bool   ATTerminal_Wait(ATTerminal* at, char* seq);
 bool   ATTerminal_IsBusy(ATTerminal* at);
+void   ATTerminal_ForceBusy(ATTerminal* at, bool busy);
 
 #endif

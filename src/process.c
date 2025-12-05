@@ -142,3 +142,5 @@ bool ATTerminal_Wait(ATTerminal* at, char* seq)
 }
 
 bool ATTerminal_IsBusy(ATTerminal* at) { return at->Busy; }
+
+void ATTerminal_ForceBusy(ATTerminal* at, bool busy) { at->Busy = busy; }
