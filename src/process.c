@@ -8,7 +8,7 @@
 #define OK    0x85E4B82F
 #define ERROR 0xDF22B531
 
-#define WAIT_TIMEOUT 10000
+#define WAIT_TIMEOUT 1000
 
 static bool read_data(ATTerminal* at);
 static void extract_response(ATTerminal* at, char* response);
@@ -121,9 +121,9 @@ void ATTerminal_Process(ATTerminal* at)
 	}
 }
 
-void ATTerminal_Wait(ATTerminal* at, char* seq)
+bool ATTerminal_Wait(ATTerminal* at, char* seq)
 {
-	char* found = NULL;
+	char*    found     = NULL;
 	uint32_t startTime = at->Time_Handler();
 	while (!found && (at->Time_Handler() - startTime) < WAIT_TIMEOUT)
 	{
@@ -137,6 +137,10 @@ void ATTerminal_Wait(ATTerminal* at, char* seq)
 		at->Receive -= length;
 		memset(at->Receive, 0, length);
 	}
+
+	return found;
 }
 
 bool ATTerminal_IsBusy(ATTerminal* at) { return at->Busy; }
+
+void ATTerminal_ForceBusy(ATTerminal* at, bool busy) { at->Busy = busy; }
